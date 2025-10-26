@@ -2,25 +2,25 @@ CC = gcc
 CFLAGS = -I. -lm
 
 HDF5_FLAGS = -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5
-COMMON_HDRS = lab1.h ./utils/data_utils.h ./kernel/conv.h ./kernel/functional.h ./kernel/matrix_ops.h ./kernel/linear.h 
-COMMON_SRC = ./utils/data_utils.c ./kernel/conv.c ./kernel/functional.c ./kernel/matrix_ops.c ./kernel/linear.c 
+COMMON_HDRS = ./utils/data_utils.h ./kernel/conv.h ./kernel/matrix_ops.h ./kernel/linear.h ./kernel/functional.h ./kernel/attention.h ./kernel/nn.h
+COMMON_SRC = ./utils/data_utils.c ./kernel/conv.c ./kernel/functional.c ./kernel/matrix_ops.c ./kernel/linear.c ./kernel/attention.c ./kernel/nn.c
 
 # Unity test framework
 UNITY_FILES = ./tests/unity/unity.c
-TEST_FILES = ./tests/all_tests.c ./tests/test_conv.c ./tests/test_functional.c ./tests/test_linear.c ./tests/test_matrix_ops.c
+TEST_FILES = $(wildcard ./tests/*.c)
 TEST_EXECUTABLES = $(patsubst %.c,%,$(TEST_FILES))
 
 # Performance
-MATMUL_TARGETS = matmul_naive
+MATMUL_TARGETS = matmul_naive matmul_blocking
 
-BINS = lab1
+BINS = lab2
 
 .PHONY: all
 all: $(BINS)
 
-.PHONY: lab1
-lab1: lab1.c $(COMMON_HDRS)
-	$(CC) -o $@ lab1.c $(COMMON_SRC) $(CFLAGS) $(HDF5_FLAGS)
+.PHONY: lab2
+lab2: lab2.c $(COMMON_HDRS)
+	$(CC) -o $@ lab2.c $(COMMON_SRC) $(CFLAGS) $(HDF5_FLAGS)
 
 .PHONY: test
 test: all_tests
@@ -42,7 +42,7 @@ grading_tests:
 .PHONY : $(MATMUL_TARGETS)
 $(MATMUL_TARGETS):
 	$(CC) -o $@ ./perf/$@.c $(COMMON_SRC) $(CFLAGS) $(HDF5_FLAGS)
-	/usr/local/pmu-tools/pmu-tools/toplev.py --core S0-C0 -l1 -v --no-desc taskset -c 0 ./$@
+	python3 /classes/ece5755/pmu-tools/toplev.py --core S0-C0 -l1 -v --force-cpu spr ./$@
 
 .PHONY: clean
 clean:

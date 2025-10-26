@@ -1,9 +1,10 @@
 #include "unity/unity.h"
 #include "test_conv.h"
-//#include "test_nn.h"
+// #include "test_nn.h"
 #include "test_functional.h"
 #include "test_linear.h"
 #include "test_matrix_ops.h"
+#include "test_attention.h"
 
 void setUp(void) {
     /* Code here will run before each test */
@@ -16,7 +17,7 @@ void tearDown(void) {
 int main(void) {
     UNITY_BEGIN();
 
-    // Test conv
+    // // Test conv
     RUN_TEST(test_conv);
     RUN_TEST(test_conv_multiple_filters_and_bias);
 
@@ -42,6 +43,22 @@ int main(void) {
     // Test matrix_ops
     RUN_TEST(test_matmul_square_matrices);
     RUN_TEST(test_matmul_incompatible_dimensions);
+    RUN_TEST(test_matmul_non_square_and_identity);
+
+    // Test matrix_ops with blocking
+    RUN_TEST(test_matmul_blocking_square_matrices);
+    RUN_TEST(test_matmul_blocking_incompatible_dimensions);
+    RUN_TEST(test_matmul_blocking_non_square_and_identity);
+
+    // // Test matrix_ops with quantization
+    RUN_TEST(test_extract_be);
+    RUN_TEST(test_matmul_quant_example_matrices);
+    RUN_TEST(test_matmul_quant_smallest_matrices);
+    RUN_TEST(test_matmul_quant_incompatible_dimensions);
+    RUN_TEST(test_matmul_quant_non_square);
+
+    // Test attention
+    RUN_TEST(test_scaled_dot_product_attention);
 
     return UNITY_END();
 }
