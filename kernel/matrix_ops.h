@@ -3,7 +3,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 float **matmul(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols);
+float **matmul_blocking(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols);
+float **matmul_quant(unsigned int **A, int **B, int A_rows, int A_cols, int B_rows, int B_cols);
+uint8_t extract_be(uint32_t a, int idx);
 
 #endif /* MATRIX_OPS_H */

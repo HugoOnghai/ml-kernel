@@ -5,12 +5,12 @@
 
 
 void test_softmax_basic(void) {
-    float input[] = {1.0, 2.0, 3.0};
-    float *output = softmax(input, 3);
+    float input[] = {1.0, 2.0, 3.0, 4.0, 3,0};
+    float *output = softmax(input, 5);
     float sum = 0.0;
 
     // Check that the sum of the output is 0 (because the output is log softmax)
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 5; i++) {
         sum += expf(output[i]);
     }
 
@@ -20,7 +20,7 @@ void test_softmax_basic(void) {
     int maxInputIndex = 0;
     int maxOutputIndex = 0;
 
-    for (int i = 1; i < 3; i++) {
+    for (int i = 1; i < 5; i++) {
         if (input[i] > input[maxInputIndex]) {
             maxInputIndex = i;
         }
