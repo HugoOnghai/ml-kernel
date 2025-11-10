@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../kernel/matrix_ops.h"
+#include "kernel/matrix_ops.h"
 
 float **generate_random_matrix(int rows, int cols) {
     float **matrix = (float **)malloc(rows * sizeof(float *));
@@ -32,19 +32,16 @@ int main() {
 
     float **A = generate_random_matrix(A_rows, A_cols);
     float **B = generate_random_matrix(B_rows, B_cols);
-    float **C;
 
-    printf("Performing blocking multiplication...\n");
-    for (int i=0; i<5; i++) {
-        C = matmul_blocking(A, B, A_rows, A_cols, B_rows, B_cols);
-    }
+    printf("Performing matmul_sparse...\n");
+    float **C = matmul_sparse(A, B, A_rows, A_cols, B_rows, B_cols);
 
     // Cleanup
     free_matrix(A, A_rows);
     free_matrix(B, B_rows);
     free_matrix(C, A_rows);
 
-    printf("Blocking multiplications completed.\n");
+    printf("matmul_sparse completed.\n");
 
     return 0;
 }

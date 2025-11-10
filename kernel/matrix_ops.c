@@ -33,6 +33,8 @@ float **matmul(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_c
     return C;
 }
 
+#define BLOCK 224
+
 float **matmul_blocking(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols)
 {
     // sources:
@@ -58,45 +60,34 @@ float **matmul_blocking(float **A, float **B, int A_rows, int A_cols, int B_rows
     int j=0;
     int k=0;
 
-    int blockSize = 0; // to be updated to be n/N where n is the smallest dimension of either matrix
-    int N = 2;
-
-    if (A_rows <= A_cols && A_rows <= B_rows && A_rows <= B_cols)
-    {
-        blockSize = A_rows / N; // if A_rows is the smallest
-    }
-    else if (A_cols <= A_rows && A_cols <= B_rows && A_cols <= B_cols)
-    {
-        blockSize = A_cols / N; // if A_cols is the smallest
-    }
-    else if (B_rows <= A_rows && B_rows <= A_cols && B_rows <= B_cols)
-    {
-        blockSize = B_rows / N; // if B_rows is the smallest
-    }
-    else 
-    {
-        blockSize = B_cols / N; // if B_cols is the smallest (casts to int...)
-    }
+    int blockSize = BLOCK;
 	
     // implementation based on reddit post cited above.
     // basically blocking should be faster than naive because we are improving data locality (otherwise it's essentially the same)
     // by blocking, we only access one local block of a matrix at a time, so we have better cache hit rates
     for(bi = 0; bi<A_rows; bi+=blockSize)
     {
+        // calculate i_max as soon as possible to avoid wasteful re-calculating
+        int i_max = bi+blockSize;
+        if (i_max > A_rows) { i_max = A_rows; }
+
 	    for(bj = 0; bj<B_cols; bj+=blockSize)
 		{   
+            int j_max = bj+blockSize;
+            if (j_max > B_cols) { j_max = B_cols; }
+
             for(bk = 0; bk<A_cols; bk+=blockSize)
             {
-                for(i = 0; i < blockSize; i++)
+                int k_max = bk+blockSize;
+                if (k_max > A_cols) { k_max = A_cols; }
+
+                for(i = bi; i < i_max; i++)
                 {
-                    for(j = 0; j < blockSize; j++)
+                    for(j = bj; j < j_max; j++)
                     {
-                        for(k = 0; k < blockSize; k++)
+                        for(k = bk; k < k_max; k++)
                         {
-                            if (bi+i < A_rows && bk+k < A_cols && bj+j < B_cols) // no need to check B_cols because it = A_cols
-                            {
-                                C[bi+i][bj+j] +=  A[bi+i][bk+k] * B[bk+k][bj+j];
-                            }
+                            C[i][j] +=  A[i][k] * B[k][j];
                         }
                     }
                 }
@@ -132,4 +123,25 @@ float **matmul_quant(unsigned int **A, int **B, int A_rows, int A_cols, int B_ro
 	    }
     }
     return C;
+}
+
+// MATMUL SPARSE!!!!!!!!!!!!
+
+float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols)
+{
+    
+}
+
+float **csrmul(float **csr_A, float **csr_Bt, int A_rows, int A_cols, int B_rows, int B_cols)
+{
+    // allocate memory for the rows (each size of a float array)
+    float **C = (float**)malloc((size_t)A_rows * sizeof(float*)); 
+
+    // allocate memory for the cols of each row (each size of a float)
+    for (int i = 0; i < A_rows; i++)
+    {
+	    C[i] = (float*)calloc((size_t)B_cols, sizeof(float));
+    }
+
+    for 
 }

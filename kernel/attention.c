@@ -38,7 +38,7 @@ float **scaled_dot_product_attention(float **Q, float **K, float **V, int seqLen
     }
 
     // apply dot products
-    float** Q_KT = matmul(Q, K_T, seqLength, depth, depth, seqLength);
+    float** Q_KT = matmul_blocking(Q, K_T, seqLength, depth, depth, seqLength);
 
     // divide each by sqrt(d_k)
     float sqrtdepth = sqrtf(depth);
@@ -62,7 +62,7 @@ float **scaled_dot_product_attention(float **Q, float **K, float **V, int seqLen
     }
 
     // multiply softmax(QdotK^T) with V
-    float** softmaxQKT_V = matmul(Q_KT, V, seqLength, seqLength, seqLength, depth);
+    float** softmaxQKT_V = matmul_blocking(Q_KT, V, seqLength, seqLength, seqLength, depth);
 
     return softmaxQKT_V;
 }
