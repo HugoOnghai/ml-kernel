@@ -15,4 +15,8 @@ void test_matmul_quant_non_square(void);
 void test_matmul_quant_smallest_matrices(void);
 void test_extract_be(void);
 
+void test_matmul_sparse_square_matrices(void);
+void test_matmul_sparse_incompatible_dimensions(void);
+void test_matmul_sparse_non_square_and_identity(void);
+
 #endif /* TEST_MATRIX_OPS_H */
