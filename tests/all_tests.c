@@ -20,6 +20,8 @@ int main(void) {
     // // Test conv
     RUN_TEST(test_conv);
     RUN_TEST(test_conv_multiple_filters_and_bias);
+    RUN_TEST(test_convolution_im2col);
+    RUN_TEST(test_convolution_im2col_multiple_filters_and_bias);
 
     // Test nn
     // RUN_TEST(test_flatten_basic);
@@ -56,6 +58,11 @@ int main(void) {
     RUN_TEST(test_matmul_quant_smallest_matrices);
     RUN_TEST(test_matmul_quant_incompatible_dimensions);
     RUN_TEST(test_matmul_quant_non_square);
+
+    // Test matrix_ops with sparse formulation
+    RUN_TEST(test_matmul_sparse_square_matrices);
+    RUN_TEST(test_matmul_sparse_incompatible_dimensions);
+    RUN_TEST(test_matmul_sparse_non_square_and_identity);
 
     // Test attention
     RUN_TEST(test_scaled_dot_product_attention);

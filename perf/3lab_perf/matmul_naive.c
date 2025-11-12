@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "kernel/matrix_ops.h"
+#include "../../kernel/matrix_ops.h"
 
 float **generate_random_matrix(int rows, int cols) {
     float **matrix = (float **)malloc(rows * sizeof(float *));
@@ -23,7 +23,7 @@ void free_matrix(float **matrix, int rows) {
 
 int main() {
     srand(time(NULL));
-    int A_rows = 1300, A_cols = 1300, B_rows = 1300, B_cols = 1300;
+    int A_rows = 1120, A_cols = 1120, B_rows = 1120, B_cols = 1120;
 
     if (A_cols != B_rows) {
         printf("Matrix dimensions incompatible for multiplication.\n");
@@ -32,9 +32,12 @@ int main() {
 
     float **A = generate_random_matrix(A_rows, A_cols);
     float **B = generate_random_matrix(B_rows, B_cols);
+    float **C;
 
     printf("Performing naive multiplication...\n");
-    float **C = matmul(A, B, A_rows, A_cols, B_rows, B_cols);
+    for (int i=0; i<5; i++) {
+        C = matmul(A, B, A_rows, A_cols, B_rows, B_cols);
+    }
 
     // Cleanup
     free_matrix(A, A_rows);

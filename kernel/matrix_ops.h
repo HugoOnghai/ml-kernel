@@ -9,6 +9,9 @@
 float **matmul(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols);
 float **matmul_blocking(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols);
 float **matmul_quant(unsigned int **A, int **B, int A_rows, int A_cols, int B_rows, int B_cols);
+void dense2csr(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols, 
+                float **nonzeros_A, int **rowptr_A, int **colidx_A, 
+                float **nonzeros_B, int **rowptr_B, int **colidx_B);
 float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols);
 float **csrmul(float *nonzeros_A, int *rowptr_A, int *colidx_A, 
                float *nonzeros_B, int *rowptr_B, int *colidx_B,

@@ -126,45 +126,46 @@ float **matmul_quant(unsigned int **A, int **B, int A_rows, int A_cols, int B_ro
 }
 
 // MATMUL SPARSE!!!!!!!!!!!!
-
-float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols)
+void dense2csr(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols, 
+                float **nonzeros_A, int **rowptr_A, int **colidx_A, 
+                float **nonzeros_B, int **rowptr_B, int **colidx_B)
 {
     int num_nonzeros_A = 0;
     int num_nonzeros_B = 0;
 
-    int *rowptr_A = (int*)calloc((size_t)(A_rows+1), sizeof(int)); // always of size A_rows + 1 and always rowptr_A[0] == 0
-    int *rowptr_B = (int*)calloc((size_t)(B_rows+1), sizeof(int)); // always of size B_rows + 1 and always rowptr_B[0] == 0
+    *rowptr_A = (int*)calloc((size_t)(A_rows+1), sizeof(int)); // always of size A_rows + 1 and always rowptr_A[0] == 0
+    *rowptr_B = (int*)calloc((size_t)(B_rows+1), sizeof(int)); // always of size B_rows + 1 and always rowptr_B[0] == 0
 
     for (int i = 0; i < A_rows; i++)
     {
         for (int j = 0; j < A_cols; j++)
         {
-            if (A[i][j] != 0)
+            if (A[i][j] != 0.0f)
             {
                 num_nonzeros_A++;
             }
         }
-        rowptr_A[i+1] = num_nonzeros_A; // after counting all the new nonzeros found after checking all entires of i-th row, update rowptr_A[i+1]
+       (*rowptr_A)[i+1] = num_nonzeros_A; // after counting all the new nonzeros found after checking all entires of i-th row, update rowptr_A[i+1]
     }
 
     for (int i = 0; i < B_rows; i++)
     {
         for (int j = 0; j < B_cols; j++)
         {
-            if (A[i][j] != 0)
+            if (B[i][j] != 0.0f)
             {
                 num_nonzeros_B++;
             }
         }
-        rowptr_B[i+1] = num_nonzeros_B; // after counting all the new nonzeros found after checking all entires of i-th row, update rowptr_B[i+1]
+        (*rowptr_B)[i+1] = num_nonzeros_B; // after counting all the new nonzeros found after checking all entires of i-th row, update rowptr_B[i+1]
     }
 
     // now that we know the number of nonzero values, we can allocate space for two arrays of size num_nonzeros, for each matrix.
-    float *nonzeros_A = (float*)calloc((size_t)(num_nonzeros_A), sizeof(float));
-    float *nonzeros_B = (float*)calloc((size_t)(num_nonzeros_B), sizeof(float));
+    *nonzeros_A = (float*)calloc((size_t)(num_nonzeros_A), sizeof(float));
+    *nonzeros_B = (float*)calloc((size_t)(num_nonzeros_B), sizeof(float));
 
-    int *colidx_A = (int*)calloc((size_t)(num_nonzeros_A), sizeof(int));
-    int *colidx_B = (int*)calloc((size_t)(num_nonzeros_B), sizeof(int));
+    *colidx_A = (int*)calloc((size_t)(num_nonzeros_A), sizeof(int));
+    *colidx_B = (int*)calloc((size_t)(num_nonzeros_B), sizeof(int));
 
     int index_A = 0;
     for (int i = 0; i < A_rows; i++)
@@ -173,8 +174,8 @@ float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, 
         {
             if (A[i][j] != 0)
             {
-                nonzeros_A[index_A] = A[i][j];
-                colidx_A[index_A] = j;
+                (*nonzeros_A)[index_A] = A[i][j];
+                (*colidx_A)[index_A] = j;
                 index_A++; // increment to next entry in arrays for next nonzero value.
             }
         }
@@ -187,15 +188,38 @@ float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, 
         {
             if (B[i][j] != 0)
             {
-                nonzeros_B[index_B] = B[i][j];
-                colidx_B[index_B] = j;
+                (*nonzeros_B)[index_B] = B[i][j];
+                (*colidx_B)[index_B] = j;
                 index_B++; // increment to next entry in arrays for next nonzero value.
             }
         }
     }
+}
+
+float **matmul_sparse(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols)
+{
+    // int A_rows, int A_cols, int B_rows, int B_cols, 
+                // float **nonzeros_A, int **rowptr_A, int **colidx_A, 
+                // float **nonzeros_B, int **rowptr_B, int **colidx_B
+    float *nonzeros_A;
+    int *rowptr_A;
+    int *colidx_A;
+
+    float *nonzeros_B;
+    int *rowptr_B;
+    int *colidx_B;
+
+    dense2csr(A, B, A_rows, A_cols, B_rows, B_cols, &nonzeros_A, &rowptr_A, &colidx_A, &nonzeros_B, &rowptr_B, &colidx_B);
 
     // now we have the three-array CSR form of A and B
     float **C = csrmul(nonzeros_A, rowptr_A, colidx_A, nonzeros_B, rowptr_B, colidx_B, A_rows, A_cols, B_rows, B_cols);
+
+    free(nonzeros_A);
+    free(rowptr_A);
+    free(colidx_A);
+    free(nonzeros_B);
+    free(rowptr_B);
+    free(colidx_B);
 
     return C;
 }
@@ -243,4 +267,5 @@ float **csrmul(float *nonzeros_A, int *rowptr_A, int *colidx_A,
             }
         }
     }
+    return C;
 }
