@@ -269,3 +269,140 @@ float **csrmul(float *nonzeros_A, int *rowptr_A, int *colidx_A,
     }
     return C;
 }
+
+// Implemented in lab 4
+// pass threaded function arguments via an argument struct
+// declaring it above worker_func so it knows what it is
+struct arg_struct {
+    float **A;
+    float **B;
+    float *C_flat;
+    int A_rows;
+    int A_cols;
+    int B_cols;
+    int start_idx;
+    int end_idx;
+};
+
+void *worker_func(void *arg) {
+    // cast arg to our struct
+    struct arg_struct *args = (struct arg_struct*)arg;
+
+    // retrieve vals from struct
+    float **A = args->A;
+    float **B = args->B;
+    float *C_flat = args->C_flat;
+
+    int A_rows = args->A_rows;
+    int A_cols = args->A_cols;
+    int B_cols = args->B_cols;
+
+    int start = args->start_idx;
+    int end = args->end_idx;
+
+    // Loop over assigned output elements (C_flat indexing)
+    for (int idx = start; idx < end; idx++) {
+
+        // idx is row major, so cols is remainder of num_cols, and every set of B_cols iterated through is a new row.
+        int row = idx / B_cols;
+        int col = idx % B_cols;
+
+        float sum = 0.0f;
+
+        // Naive matmul, same inner product for C[row][col]
+        for (int k = 0; k < A_cols; k++) {
+            sum += A[row][k] * B[k][col];
+        }
+
+        // write sum to C_flat (at given index)
+        C_flat[idx] = sum;
+    }
+    return NULL;
+}
+
+float **matmul_thread(float **A, float **B, int A_rows, int A_cols, int B_rows, int B_cols)
+{
+    // TODO: Implement multithreaded matrix multiplication
+    // notes on pthred_create() (from geeksforgeeks.org)
+    // pthread_create(thread, attr, routine, arg);
+    // thread = pointer to pthread_t variable that stores id of the thread
+    // attr = thread attribute obj that defines thread properties
+    // routine = pointer to func that thread will execute void* and accept a void* argument
+    // arg = a single argument passed to the thread function (pass a struct or pointer to pass multiple vals)
+    
+    // pthread_t thread1;
+
+    // pthread_join(thread, retval);
+    // thread = thread Id you want to wait for (the thread that will be joined)
+    // retval = pointer to location where the exit status of the thread will be stored.
+    // synchronize threads to ensure execution of threads ends before main() ends, otherwise unexpected behavior
+
+    // if dimensions mismatch, NULL
+    if (A_cols != B_rows) { return NULL; }
+
+    // allocate memory for the 2D matrix C
+    float **C = (float**)malloc(A_rows * sizeof(float*));
+
+    // allocate memory for the flattened C matrix, which we can then align to the start of a cache line.
+    float *C_flat;
+
+    // from man7.org, this allocates sizeof(float)*A_rows*B_cols bytes, starting with the memory address &C_flat.
+    // and this starting memory address will be a multiple of 64 --> will be at the start of a cache line.
+    // cache line is 64 bytes, which we found from "getconf LEVEL1_DCACHE_LINESIZE" (returned 64).
+    posix_memalign((void**)&C_flat, 64, sizeof(float) * A_rows * B_cols); 
+    memset(C_flat, 0, sizeof(float) * A_rows * B_cols); // this fills all of the values in the output matrix with 0, from <string.h>
+
+    // from the lab guidelines, we know slurm allocates us 8 cores. Since each CPU core only can run 1 thread at a time,
+    // let us initialize and distribute our task across all 8 threads, if we made extra threads (it'd just be wasted memory overhead, bad for perf)
+    // Asked TA, should we use all cores even if it leads to false sharing (in the case of small input matrices)
+    int num_threads = 8; // 1 thread per core
+    int total_elems = A_rows * B_cols; // size of output matrix
+    int num_cache_lines = (total_elems + 15) / 16; // add 15 to force truncation to "round up" to count the potentially last partially filled cache line.
+    int min_cache_lines_per_thread = num_cache_lines / num_threads; // int division will cast to int, so handle "lost/remaining" lines next
+    int total_remaining_cache_lines = num_cache_lines % num_threads; // add one remaining cache_line to one thread each, should be >=0 & <=7.
+
+    pthread_t threads[num_threads];
+
+    struct arg_struct args[num_threads];
+
+    int curr_elem = 0;
+    for (int t = 0; t < num_threads; ++t) {
+        int num_cache_lines_per_thread = min_cache_lines_per_thread + (t < total_remaining_cache_lines ? 1 : 0); // gives a remaining cache line to the first "total_rem_cache_lines" of threads
+        int num_elems_per_thread = num_cache_lines_per_thread * 16; // since cache_line_size/sizeof(float)=16
+
+        int start_idx = curr_elem;
+        int end_idx = start_idx + num_elems_per_thread;
+        if (end_idx > total_elems) { end_idx = total_elems; } // handle case of partially filled last cache line
+        curr_elem = end_idx; // prepare for next thread
+
+        args[t] = (struct arg_struct){
+            .A = A,
+            .B = B,
+            .C_flat = C_flat,
+            .A_rows = A_rows,
+            .A_cols = A_cols,
+            .B_cols = B_cols,
+            .start_idx = start_idx,
+            .end_idx = end_idx
+        };
+
+        pthread_create(&threads[t], NULL, worker_func, &args[t]);
+    }
+
+    for (int t = 0; t < num_threads; ++t)
+        pthread_join(threads[t], NULL);
+
+    // Convert flat C to 2D C
+    for (int i = 0; i < A_rows; ++i)
+    {
+        C[i] = (float*)malloc((size_t)B_cols * sizeof(float));
+        for (int j = 0; j < B_cols; ++j) 
+        {
+            C[i][j] = C_flat[i * B_cols + j];
+        }
+    }
+
+    free(C_flat); // clean up after writing to C 2D matrix
+
+    return C;
+}

@@ -64,6 +64,11 @@ int main(void) {
     RUN_TEST(test_matmul_sparse_incompatible_dimensions);
     RUN_TEST(test_matmul_sparse_non_square_and_identity);
 
+    // Test naive matrix_ops with multi_threading
+    RUN_TEST(test_matmul_thread_square_matrices);
+    RUN_TEST(test_matmul_thread_incompatible_dimensions);
+    RUN_TEST(test_matmul_thread_non_square_and_identity);
+
     // Test attention
     RUN_TEST(test_scaled_dot_product_attention);
 

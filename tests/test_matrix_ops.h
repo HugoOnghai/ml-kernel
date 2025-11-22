@@ -19,4 +19,8 @@ void test_matmul_sparse_incompatible_dimensions(void);
 void test_matmul_sparse_non_square_and_identity(void);
 void test_matmul_sparse_square_matrices(void);
 
+void test_matmul_thread_square_matrices(void);
+void test_matmul_thread_incompatible_dimensions(void);
+void test_matmul_thread_non_square_and_identity(void);
+
 #endif /* TEST_MATRIX_OPS_H */

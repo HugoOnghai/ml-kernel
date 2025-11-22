@@ -1,0 +1,28 @@
+Implementation: matmul_naive
+Matrix Size: 2000x2000
+================================
+
+Consider disabling nmi watchdog to minimize multiplexing
+(echo 0 | sudo tee /proc/sys/kernel/nmi_watchdog or
+ echo kernel.nmi_watchdog=0 >> /etc/sysctl.conf ; sysctl -p as root)
+# 4.8-full-perf on INTEL(R) XEON(R) SILVER 4514Y [spr/sapphire_rapids]
+FE               Frontend_Bound                      % Slots                        3.9  <
+BAD              Bad_Speculation                     % Slots                        0.8  <
+BE               Backend_Bound                       % Slots                       39.4   
+RET              Retiring                            % Slots                       55.8  <
+FE               Frontend_Bound.Fetch_Latency        % Slots                        1.4  <
+FE               Frontend_Bound.Fetch_Bandwidth      % Slots                        2.6  <
+BAD              Bad_Speculation.Branch_Mispredicts  % Slots                        0.4  <
+BAD              Bad_Speculation.Machine_Clears      % Slots                        0.4  <
+BE/Mem           Backend_Bound.Memory_Bound          % Slots                        5.6  <
+BE/Core          Backend_Bound.Core_Bound            % Slots                       33.8   <==
+RET              Retiring.Light_Operations           % Slots                       54.3  <
+RET              Retiring.Heavy_Operations           % Slots                        1.5  <
+MUX                                                  %                            100.00  
+Run toplev --describe Core_Bound^ to get more information on bottleneck
+Add --run-sample to find locations
+Add --nodes '!+Core_Bound*/3,+MUX' for breakdown.
+
+real	3m47.948s
+user	3m47.624s
+sys	0m0.106s
