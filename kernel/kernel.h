@@ -3,8 +3,9 @@
 
 #include "conv.h"
 #include "matrix_ops.h"
-#include "linear.h"
 #include "functional.h"
-// #include "nn.h"
+#include "linear.h"
+#include "nn.h"
+#include "attention.h"
 
 #endif // KERNEL_H

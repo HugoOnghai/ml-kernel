@@ -10,10 +10,11 @@
 typedef enum
 {
     MATMUL_BASE,
-    MATMUL_THREAD
+    MATMUL_SPARSE
 } MatmulType;
 
 float ***convolution(float ***image, int numChannels, float ****kernel, float *biasData, int numFilters, int inputSize, int kernelSize);
 float ***convolution_im2col(float ***image, int numChannels, float ****kernel, float *biasData, int numFilters, int inputSize, int kernelSize, MatmulType matmul_type);
+
 
 #endif
