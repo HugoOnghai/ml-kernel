@@ -59,6 +59,10 @@ make matmul_thread
 make clean
 ```
 
+## Also in this repo
+
+[`gpt2/`](gpt2/) — GPT-2 inference implemented from scratch in C, optimized with AVX2/FMA SIMD intrinsics for a ~44× speedup. Includes baseline, vectorized, and dual-accumulator variants with full profiling data.
+
 ## Tech
 
-C · POSIX Threads · HDF5 · Intel Top-Down Methodology (toplev) · Unity test framework
+C · POSIX Threads · HDF5 · Intel AVX2/FMA · Intel Top-Down Methodology (toplev) · Unity test framework
