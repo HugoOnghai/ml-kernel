@@ -1,0 +1,13 @@
+# Build artifacts
+matmul_naive
+matmul_thread
+lab4
+tests/all_tests
+grading/grading_tests
+grading/grading.txt
+
+# macOS
+.DS_Store
+
+# Course PDFs
+*.pdf
